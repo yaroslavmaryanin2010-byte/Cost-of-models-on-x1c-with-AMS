@@ -1,6 +1,0 @@
-name = "cost-of-models-on-x1c-with-ams"
-main = "worker.js"
-compatibility_date = "2026-01-01"
-
-[assets]
-directory = "./public"

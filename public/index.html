@@ -8,62 +8,133 @@
 *{box-sizing:border-box}body{margin:0;padding:16px 16px 32px;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif}
 h1{font-size:20px;margin:0 0 12px}h2{font-size:14px;margin:20px 0 8px;color:var(--hint);font-weight:600}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:13px;color:var(--hint)}
-input{width:100%;margin-top:4px;padding:10px;border:1px solid transparent;border-radius:10px;background:var(--sec);color:var(--tx);font:inherit}
-input:focus{outline:2px solid var(--btn)}.wide{grid-column:1/-1}
+input,select{width:100%;margin-top:4px;padding:10px;border:1px solid transparent;border-radius:10px;background:var(--sec);color:var(--tx);font:inherit}
+input:focus,select:focus{outline:2px solid var(--btn)}.wide{grid-column:1/-1}
+#warn{color:#d9822b;font-size:13px;margin-top:6px;min-height:1em}
 .total{margin-top:20px;padding:16px;border-radius:14px;background:var(--sec)}
-.total .sum{font-size:32px;font-weight:700}.row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
-.row span:first-child{color:var(--hint)}small{color:var(--hint);display:block;margin-top:12px;font-size:12px}
+.sum{font-size:32px;font-weight:700}#unit{color:var(--hint);font-size:14px;margin-bottom:6px}
+.row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.row span:first-child{color:var(--hint)}
+.btns{display:flex;gap:10px;margin-top:12px}
+button{flex:1;padding:12px;border:0;border-radius:10px;background:var(--btn);color:var(--btx);font:inherit;font-weight:600}
+button.sec{background:var(--sec);color:var(--tx)}
+#clbox{margin-top:12px;padding:12px;border-radius:12px;background:var(--sec)}#cl{white-space:pre-wrap;margin:0 0 10px;font:inherit}
+.item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--sec)}
+.item span{flex:1;cursor:pointer}.item button{flex:0 0 auto;padding:4px 10px;background:var(--sec);color:var(--hint)}
+.hint,small{color:var(--hint);font-size:12px}small{display:block;margin-top:12px}
 </style></head><body>
 <h1>Стоимость печати</h1>
-<h2>Модель</h2>
+<h2>Пластик Bambu Lab</h2>
 <div class="grid">
-<label>Вес, г<input id="grams" type="number" inputmode="decimal" value="50"></label>
-<label>Время печати, ч<input id="hours" type="number" inputmode="decimal" step="0.1" value="3"></label>
-<label>Старт печати (час, 0–23)<input id="start" type="number" inputmode="numeric" min="0" max="23" value="12"></label>
+<label>Тип<select id="type"></select></label>
+<label>Подтип<select id="sub"></select></label>
+<label>Цена, ₽/кг<input id="kg" type="number" inputmode="decimal" placeholder="введите цену"></label>
 <label>Брак/отходы, %<input id="waste" type="number" inputmode="decimal" value="10"></label>
 </div>
-<h2>Тарифы</h2>
+<div id="warn"></div>
+<h2>Модель (данные на 1 штуку)</h2>
 <div class="grid">
-<label>Пластик, ₽/кг<input id="kg" type="number" inputmode="decimal"></label>
+<label class="wide">Название<input id="name" type="text" placeholder="например, подставка для телефона"></label>
+<label>Вес, г<input id="grams" type="number" inputmode="decimal" value="50"></label>
+<label>Время печати, ч<input id="hours" type="number" inputmode="decimal" step="0.1" value="3"></label>
+<label>Количество, шт<input id="qty" type="number" inputmode="numeric" min="1" value="1"></label>
+<label>Старт печати (час, 0–23)<input id="start" type="number" inputmode="numeric" min="0" max="23" value="12"></label>
+</div>
+<h2>Электричество и расходы</h2>
+<div class="grid">
 <label>Мощность принтера, Вт<input id="watt" type="number" inputmode="decimal" value="120"></label>
+<label>Износ, ₽/час<input id="wear" type="number" inputmode="decimal" value="10"></label>
 <label>Свет день, ₽/кВт·ч<input id="day" type="number" inputmode="decimal" step="0.01"></label>
 <label>Свет ночь, ₽/кВт·ч<input id="night" type="number" inputmode="decimal" step="0.01"></label>
+<label>Работа за заказ, ₽<input id="labor" type="number" inputmode="decimal" value="0"></label>
+<label>Наценка, %<input id="markup" type="number" inputmode="decimal" value="50"></label>
 </div>
-<h2>Свои расходы</h2>
-<div class="grid">
-<label>Износ, ₽/час<input id="wear" type="number" inputmode="decimal" value="10"></label>
-<label>Работа, ₽<input id="labor" type="number" inputmode="decimal" value="0"></label>
-<label class="wide">Наценка, %<input id="markup" type="number" inputmode="decimal" value="50"></label>
-</div>
-<div class="total"><div class="sum" id="sum">0 ₽</div>
-<div id="rows"></div></div>
+<div class="total"><div class="sum" id="sum">0 ₽</div><div id="unit"></div><div id="rows"></div></div>
+<div class="btns"><button id="save">Сохранить</button><button id="cbtn" class="sec">Для клиента</button></div>
+<div id="clbox" hidden><pre id="cl"></pre>
+<div class="btns"><button id="copy" class="sec">Копировать</button><button id="share">Отправить</button></div></div>
+<h2>Сохранённые расчёты</h2>
+<div id="saved"></div>
 <small id="meta"></small>
 <script>
 const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();
 const $=id=>document.getElementById(id),n=id=>parseFloat($(id).value)||0,fmt=v=>v.toFixed(2).replace('.',',')+' ₽';
-const ids=['grams','hours','start','waste','kg','watt','day','night','wear','labor','markup'];
-// Сколько часов печати попадает на ночь (23:00–7:00)
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ids=['type','sub','name','grams','hours','qty','start','waste','watt','wear','labor','markup'];
+let R=null,last={q:1,total:0,unit:0},items=[];
+// Хранилище: облако Telegram (между устройствами), иначе localStorage
+const cs=tg?.CloudStorage&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.9')?tg.CloudStorage:null;
+const ls=(f,d)=>{try{return f()}catch{return d}};
+const store={
+  keys:()=>new Promise(r=>cs?cs.getKeys((e,k)=>r(e?[]:k)):r(ls(()=>Object.keys(localStorage),[]))),
+  get:ks=>new Promise(r=>!ks.length?r({}):cs?cs.getItems(ks,(e,v)=>r(e?{}:v)):r(Object.fromEntries(ks.map(k=>[k,ls(()=>localStorage.getItem(k),null)])))),
+  set:(k,v)=>new Promise(r=>cs?cs.setItem(k,v,()=>r()):(ls(()=>localStorage.setItem(k,v)),r())),
+  del:k=>new Promise(r=>cs?cs.removeItem(k,()=>r()):(ls(()=>localStorage.removeItem(k)),r()))
+};
 function nightHours(start,hours){let night=0;for(let m=0;m<Math.round(hours*60);m++){const h=((start*60+m)/60)%24;if(h>=23||h<7)night+=1/60}return night}
+function fillSubs(){$('sub').innerHTML=R.filaments[$('type').value].subtypes.map((s,i)=>`<option value="${i}">${s.name}</option>`).join('')}
+function applyPrice(){
+  const s=R.filaments[$('type').value].subtypes[$('sub').value];
+  $('kg').value=s.price??'';
+  $('warn').textContent=[s.abrasive?'Нужно закалённое сопло.':'',s.price==null?'Цена не задана, введите свою.':''].join(' ').trim();
+  calc();
+}
 function calc(){
-  const nh=nightHours(n('start'),n('hours')),dh=n('hours')-nh,kw=n('watt')/1000;
-  const plastic=n('grams')*(1+n('waste')/100)*n('kg')/1000;
+  const q=Math.max(1,Math.floor(n('qty'))||1),T=n('hours')*q;
+  const nh=nightHours(n('start'),T),dh=T-nh,kw=n('watt')/1000;
+  const plastic=n('grams')*q*(1+n('waste')/100)*n('kg')/1000;
   const power=kw*(dh*n('day')+nh*n('night'));
-  const wear=n('hours')*n('wear'),base=plastic+power+wear+n('labor');
+  const wear=T*n('wear'),base=plastic+power+wear+n('labor');
   const total=base*(1+n('markup')/100);
-  $('sum').textContent=fmt(total);
+  last={q,total,unit:total/q};
+  $('sum').textContent=fmt(total);$('unit').textContent=q>1?`${q} шт, за штуку: ${fmt(total/q)}`:'';
   $('rows').innerHTML=[['Пластик',plastic],['Электричество',power],['Износ',wear],['Работа',n('labor')],['Себестоимость',base],['Наценка',total-base]]
     .map(([a,b])=>`<div class="row"><span>${a}</span><span>${fmt(b)}</span></div>`).join('');
-  localStorage.setItem('calc',JSON.stringify(Object.fromEntries(ids.map(i=>[i,$(i).value]))));
+  $('clbox').hidden=true;
+  ls(()=>localStorage.setItem('calc3',JSON.stringify(Object.fromEntries(ids.map(i=>[i,$(i).value])))));
 }
-ids.forEach(i=>$(i).addEventListener('input',calc));
+async function renderSaved(){
+  const ks=(await store.keys()).filter(k=>k.startsWith('c_')).sort().reverse(),v=await store.get(ks);
+  items=ks.map(k=>{try{return {k,...JSON.parse(v[k])}}catch{return null}}).filter(Boolean);
+  $('saved').innerHTML=items.length?items.map((d,i)=>`<div class="item"><span data-load="${i}">${esc(d.name)}</span><b>${fmt(d.total)}</b><button data-del="${i}">✕</button></div>`).join(''):'<div class="hint">Пока пусто. Нажмите «Сохранить».</div>';
+}
+async function save(){
+  const d={...Object.fromEntries(ids.map(i=>[i,$(i).value])),kg:$('kg').value,day:$('day').value,night:$('night').value,total:last.total};
+  if(!d.name)d.name='Без названия';
+  await store.set('c_'+Date.now(),JSON.stringify(d));renderSaved();
+}
+function load(d){
+  $('type').value=d.type;fillSubs();$('sub').value=d.sub;
+  for(const k of ids)if(k!=='type'&&k!=='sub')$(k).value=d[k];
+  $('kg').value=d.kg;$('day').value=d.day;$('night').value=d.night;calc();scrollTo(0,0);
+}
+function clientText(){
+  const f=R.filaments[$('type').value],s=f.subtypes[$('sub').value];
+  return `Заказ: ${$('name').value||'3D-печать'}\nМатериал: Bambu Lab ${f.type} ${s.name}\nКоличество: ${last.q} шт\n`+(last.q>1?`Цена за штуку: ${Math.round(last.unit)} ₽\n`:'')+`Итого: ${Math.round(last.total)} ₽`;
+}
+$('saved').addEventListener('click',async e=>{
+  const l=e.target.dataset.load,d=e.target.dataset.del;
+  if(l!==undefined)load(items[l]);
+  if(d!==undefined){await store.del(items[d].k);renderSaved()}
+});
+$('save').onclick=save;
+$('cbtn').onclick=()=>{$('cl').textContent=clientText();$('clbox').hidden=false};
+$('copy').onclick=()=>{navigator.clipboard?.writeText($('cl').textContent);$('copy').textContent='Скопировано'};
+$('share').onclick=()=>{const u='https://t.me/share/url?url=%20&text='+encodeURIComponent($('cl').textContent);tg?tg.openTelegramLink(u):window.open(u)};
+['name','grams','hours','qty','start','waste','kg','watt','day','night','wear','labor','markup'].forEach(i=>$(i).addEventListener('input',calc));
+$('type').addEventListener('change',()=>{fillSubs();applyPrice()});
+$('sub').addEventListener('change',applyPrice);
 (async()=>{
-  const saved=JSON.parse(localStorage.getItem('calc')||'{}');
+  const saved=ls(()=>JSON.parse(localStorage.getItem('calc3')||'{}'),{});
   try{
-    const r=await (await fetch('/rates.json')).json();
-    $('kg').value=r.filament.pricePerKg;$('day').value=r.electricity.day;$('night').value=r.electricity.night;
-    $('meta').textContent=`Тарифы обновлены ${r.updated}. ${r.filament.note}. ${r.electricity.note}.`;
-  }catch{$('meta').textContent='Не удалось загрузить тарифы. Введите их вручную.'}
-  for(const k in saved)if(!['kg','day','night'].includes(k))$(k).value=saved[k];
-  calc();
+    R=await (await fetch('/rates.json')).json();
+    $('type').innerHTML=R.filaments.map((f,i)=>`<option value="${i}">${f.type}</option>`).join('');
+    if(R.filaments[saved.type])$('type').value=saved.type;
+    fillSubs();
+    if(R.filaments[$('type').value].subtypes[saved.sub])$('sub').value=saved.sub;
+    $('day').value=R.electricity.day;$('night').value=R.electricity.night;
+    $('meta').textContent=`Тарифы обновлены ${R.updated}. ${R.electricity.note}.`;
+    for(const k in saved)if(!['type','sub'].includes(k))$(k).value=saved[k];
+    applyPrice();renderSaved();
+  }catch{$('meta').textContent='Не удалось загрузить тарифы.'}
 })();
 </script></body></html>
